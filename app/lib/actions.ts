@@ -22,48 +22,56 @@ const CreateInvoice = FormSchema.omit({
 
  const createInvoice = async (formData: FormData) => {
     const {customerId, amount, status} = CreateInvoice.parse({
-        customerId: formData.get('customerId'),
-        amount: formData.get('amount'),
-        status: formData.get('status'),
-    })
+            customerId: formData.get('customerId'),
+            amount: formData.get('amount'),
+            status: formData.get('status'),
+        })
 
-    const amountInCents = amount * 100;
-    const date = new Date().toISOString().split('T')[0]; // Format date as YYYY-MM-DD
+        const amountInCents = amount * 100;
+        const date = new Date().toISOString().split('T')[0]; // Format date as YYYY-MM-DD
 
-    await sql`
-            INSERT INTO invoices (customer_id, amount, status, date)
-            VALUES(${customerId}, ${amountInCents}, ${status}, ${date})
-        `;
-
+    try {         
+        await sql`
+                INSERT INTO invoices (customer_id, amount, status, date)
+                VALUES(${customerId}, ${amountInCents}, ${status}, ${date})
+            `;
+    } catch (error) {
+        console.error('Error creating invoice:', error);
+        throw new Error('Failed to create invoice');
+    }    
+    
     revalidatePath('/dashboard/invoices');
-    redirect('/dashboard/invoices'); 
+    redirect('/dashboard/invoices');
  }
 
  export const updateInvoice = async (id: string, formData: FormData) => {
     const {customerId, amount, status} = CreateInvoice.parse({
-        customerId: formData.get('customerId'),
-        amount: formData.get('amount'),
-        status: formData.get('status'),
-    })
+            customerId: formData.get('customerId'),
+            amount: formData.get('amount'),
+            status: formData.get('status'),
+        })
 
-    const amountInCents = amount * 100;
-    const date = new Date().toISOString().split('T')[0]; // Format date as YYYY-MM-DD
-
-    await sql`
-            UPDATE invoices
-            SET customer_id=${customerId}, amount=${amountInCents}, status=${status}
-            WHERE id=${id}
-        `;
+        const amountInCents = amount * 100;
+        
+    try {
+        await sql`
+                UPDATE invoices
+                SET customer_id=${customerId}, amount=${amountInCents}, status=${status}
+                WHERE id=${id}
+            `;
+    } catch (error) {
+        console.error('Error updating invoice:', error);
+        throw new Error('Failed to update invoice');
+    }
 
     revalidatePath('/dashboard/invoices');
-    redirect('/dashboard/invoices');    
+    redirect('/dashboard/invoices');
  }
 
  export const deleteInvoice = async (id: string) => {
-    
     await sql`DELETE FROM invoices WHERE id=${id}`;
-
-    revalidatePath('/dashboard/invoices');
+    
+    revalidatePath('/dashboard/invoices');        
  } 
 
  export default createInvoice;
